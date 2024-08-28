@@ -1,0 +1,114 @@
+import { useFetch } from '../hooks/useFetch';
+import { Results } from '../types/Pokemons';
+import { MAX_NUMBER_OF_POKEMON_CARDS, URL_POKEMON_API } from '../lib/constants';
+import { createPageList } from '../helpers/createPageList';
+import { useEffect, useState } from 'react';
+import { PageList } from '../types/PageList';
+
+type NavigationProps = {
+  pokemonIdList: number[];
+  currentPageNumber: number;
+  setCurrentPageNumber: React.Dispatch<React.SetStateAction<number>>;
+};
+
+export const Navigation = ({ pokemonIdList, currentPageNumber, setCurrentPageNumber }: NavigationProps) => {
+  const { data } = useFetch<Results>(URL_POKEMON_API);
+  const [pageList, setPageList] = useState<PageList>();
+
+  useEffect(() => {
+    if (data) {
+      const totalNumberPages = Math.ceil(data.count / MAX_NUMBER_OF_POKEMON_CARDS); //TODO: totalNumberPages se crea a pesar que data no ha cambiado.
+      const newPageList = createPageList(currentPageNumber, totalNumberPages);
+      setPageList(newPageList);
+    }
+  }, [data, currentPageNumber]);
+
+  const nextPage = () => {
+    setCurrentPageNumber(currentPageNumber => currentPageNumber + 1);
+  };
+
+  const previousPage = () => {
+    setCurrentPageNumber(currentPageNumber => currentPageNumber - 1);
+  };
+
+  return (
+    <div className='flex items-center justify-between bg-white px-4 py-3 sm:px-6'>
+      <div className='flex flex-1 justify-between sm:hidden'>
+        <a
+          href='#'
+          className='relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50'>
+          Previous
+        </a>
+        <a
+          href='#'
+          className='relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50'>
+          Next
+        </a>
+      </div>
+      <div className='hidden sm:flex sm:flex-1 sm:items-center sm:justify-between'>
+        <div>
+          <p className='text-sm text-gray-700'>
+            {'Showing '}
+            <span className='font-medium'>{pokemonIdList[0]}</span>
+            {' to '}
+            <span className='font-medium'>{pokemonIdList[pokemonIdList.length - 1]}</span>
+            {' of '}
+            <span className='font-medium'>{data?.count}</span>
+            {' results'}
+          </p>
+        </div>
+        <div>
+          <nav className='isolate inline-flex -space-x-px rounded-md shadow-sm' aria-label='Pagination'>
+            <button
+              onClick={previousPage}
+              className='relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'>
+              <span className='sr-only'>Previous</span>
+              <svg className='h-5 w-5' viewBox='0 0 20 20' fill='currentColor' aria-hidden='true'>
+                <path
+                  fillRule='evenodd'
+                  d='M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </button>
+            {/* Current: "z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600", Default: "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0" */}
+            {pageList?.map(page => {
+              if (page === '...')
+                return (
+                  <span
+                    key={page}
+                    className='relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0'>
+                    ...
+                  </span>
+                );
+              return (
+                <button
+                  onClick={() => setCurrentPageNumber(page)}
+                  key={page}
+                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 ${
+                    page === currentPageNumber
+                      ? 'text-white z-10 bg-indigo-600  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                      : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
+                  }`}>
+                  {page}
+                </button>
+              );
+            })}
+            <button
+              onClick={nextPage}
+              className='relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'>
+              <span className='sr-only'>Next</span>
+              <svg className='h-5 w-5' viewBox='0 0 20 20' fill='currentColor' aria-hidden='true'>
+                <path
+                  fillRule='evenodd'
+                  d='M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+};
