@@ -1,35 +1,26 @@
-import { useFetch } from '../hooks/useFetch';
-import { Results } from '../types/Pokemons';
-import { MAX_NUMBER_OF_POKEMON_CARDS, URL_POKEMON_API } from '../lib/constants';
+import { MAX_NUMBER_OF_POKEMON_CARDS } from '../lib/constants';
 import { createPageList } from '../helpers/createPageList';
 import { useEffect, useState } from 'react';
 import { PageList } from '../types/PageList';
 
 type NavigationProps = {
-  pokemonIdList: number[];
+  pokemonIds: number[];
   currentPageNumber: number;
-  setCurrentPageNumber: React.Dispatch<React.SetStateAction<number>>;
+  nextPage: () => void;
+  previousPage: () => void;
 };
 
-export const Navigation = ({ pokemonIdList, currentPageNumber, setCurrentPageNumber }: NavigationProps) => {
-  const { data } = useFetch<Results>(URL_POKEMON_API);
-  const [pageList, setPageList] = useState<PageList>();
+export const Navigation = ({ pokemonIds, currentPageNumber, nextPage, previousPage }: NavigationProps) => {
+  const [pageList, setPageList] = useState<PageList>([]);
 
   useEffect(() => {
-    if (data) {
-      const totalNumberPages = Math.ceil(data.count / MAX_NUMBER_OF_POKEMON_CARDS); //TODO: totalNumberPages se crea a pesar que data no ha cambiado.
+    if (pokemonIds) {
+      const totalNumberPages = Math.ceil(pokemonIds.length / MAX_NUMBER_OF_POKEMON_CARDS); //TODO: totalNumberPages se crea a pesar que data no ha cambiado.
+      console.log(totalNumberPages);
       const newPageList = createPageList(currentPageNumber, totalNumberPages);
       setPageList(newPageList);
     }
-  }, [data, currentPageNumber]);
-
-  const nextPage = () => {
-    setCurrentPageNumber(currentPageNumber => currentPageNumber + 1);
-  };
-
-  const previousPage = () => {
-    setCurrentPageNumber(currentPageNumber => currentPageNumber - 1);
-  };
+  }, [pokemonIds, currentPageNumber]);
 
   return (
     <div className='flex items-center justify-between bg-white px-4 py-3 sm:px-6'>
@@ -49,11 +40,11 @@ export const Navigation = ({ pokemonIdList, currentPageNumber, setCurrentPageNum
         <div>
           <p className='text-sm text-gray-700'>
             {'Showing '}
-            <span className='font-medium'>{pokemonIdList[0]}</span>
+            <span className='font-medium'>{}</span>
             {' to '}
-            <span className='font-medium'>{pokemonIdList[pokemonIdList.length - 1]}</span>
+            <span className='font-medium'>{}</span>
             {' of '}
-            <span className='font-medium'>{data?.count}</span>
+            <span className='font-medium'>{}</span>
             {' results'}
           </p>
         </div>
@@ -83,7 +74,6 @@ export const Navigation = ({ pokemonIdList, currentPageNumber, setCurrentPageNum
                 );
               return (
                 <button
-                  onClick={() => setCurrentPageNumber(page)}
                   key={page}
                   className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 ${
                     page === currentPageNumber
